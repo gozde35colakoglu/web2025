@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kullanıcı Listesi</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Kullanıcı Listesi</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Adı ve Soyadı</th>
+                <th>Eposta</th>
+                <th>Şifre</th>
+                <th>Yetki</th>
+                <th>Tarih</th>
+
+            </tr>
+        </thead>
+        <tbody id="userTableBody">
+            <!-- Kullanıcılar buraya yüklenecek -->
+        </tbody>
+    </table>
+
+    <script>
+        // Kullanıcıları API'den al ve tabloya ekle
+        async function loadUsers() {
+            try {
+                const response = await fetch("http://localhost:5000/api/kullanici_getir");
+                if (!response.ok) {
+                    throw new Error("Kullanıcılar yüklenemedi.");
+                }
+                const users = await response.json();
+                const tableBody = document.getElementById("userTableBody");
+                users.forEach((user) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${user.ID}</td>
+                        <td>${user.ad_soyad}</td>
+                        <td>${user.eposta}</td>
+                        <td>${user.kullanici_sifre}</td>
+                        <td>${user.kullanici_yetki_id}</td>
+                        <td>${user.tarih}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error(error);
+                alert("Kullanıcılar yüklenirken bir hata oluştu.");
+            }
+        }
+
+        // Sayfa yüklendiğinde kullanıcıları yükle
+        window.onload = loadUsers;
+    </script>
+</body>
+</html>

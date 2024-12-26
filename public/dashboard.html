@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gösterge Paneli</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+
+        /* Yan Menü */
+        .sidebar {
+            width: 250px;
+            background-color: #333;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+            position: fixed;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+        }
+
+        .sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        .sidebar ul li {
+            margin: 10px 0;
+        }
+
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .sidebar ul li a:hover {
+            background-color: #575757;
+        }
+
+        /* İçerik */
+        .content {
+            margin-left: 270px;
+            padding: 20px;
+            width: calc(100% - 270px);
+            box-sizing: border-box;
+        }
+
+        h1, h2 {
+            margin-top: 0;
+        }
+
+        canvas {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Menü</h2>
+        <ul>
+            <li><a href="#ordersTable">Sipariş Listesi</a></li>
+            <li><a href="#salesChart">Satış Grafiği</a></li>
+            <li><a href="#">Ayarlar</a></li>
+            <li><a href="#">Çıkış</a></li>
+        </ul>
+    </div>
+    <div class="content">
+        <div class="filter-container">
+            <h3>Siparişleri Tarihe Göre Filtrele</h3>
+            <input type="date" id="startDate" />
+            <input type="date" id="endDate" />
+            <button onclick="filterOrders()">Filtrele</button>
+        </div>
+    <table id="ordersTable" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Müşteri Adı</th>
+                <th>Sipariş Tarihi</th>
+                <th>Toplam Tutar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Sipariş verileri buraya eklenecek -->
+        </tbody>
+    </table>
+
+    <h2>Günlük Satış Grafiği</h2>
+    <canvas id="salesChart" width="400" height="200"></canvas>
+</div>
+    <script>
+        // Siparişleri DataTable'a yükle
+        async function loadOrders() {
+            try {
+                const response = await fetch("http://localhost:5000/api/siparis_getir");
+                const result = await response.json();
+
+                if (result.success) {
+                    const tableBody = document.querySelector("#ordersTable tbody");
+                    result.data.forEach(order => {
+                        const row = `
+                            <tr>
+                                <td>${order.id}</td>
+                                <td>${order.customer_name}</td>
+                                <td>${order.order_date}</td>
+                                <td>${order.total_amount}</td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+
+                    // DataTable'ı başlat
+                    $('#ordersTable').DataTable();
+                } else {
+                    alert("Siparişler alınamadı: " + result.message);
+                }
+            } catch (error) {
+                console.error("Bir hata oluştu:", error);
+            }
+        }
+
+        // Sipariş özetini grafikte göster
+        async function fetchSalesData() {
+            try {
+                const response = await fetch("http://localhost:5000/api/satis_getir");
+                const result = await response.json();
+
+                if (result.success) {
+                    const labels = result.data.map(item => item.sales_date); // Tarihler
+                    const data = result.data.map(item => item.sales_amount); // Satış miktarları
+
+                    // Grafik oluştur
+                    const ctx = document.getElementById("salesChart").getContext("2d");
+                    new Chart(ctx, {
+                        type: "line",
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: "Daily Sales",
+                                    data: data,
+                                    borderColor: "blue",
+                                    fill: false,
+                                    tension: 0.1,
+                                },
+                            ],
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: "Date",
+                                    },
+                                },
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: "Sales Amount",
+                                    },
+                                },
+                            },
+                        },
+                    });
+                } else {
+                    alert("Veri alınamadı: " + result.message);
+                }
+            } catch (error) {
+                console.error("Error fetching sales data:", error);
+            }
+        }
+        async function filterOrders() {
+    const startDate = document.getElementById("startDate").value;
+    const endDate = document.getElementById("endDate").value;
+
+    if (!startDate || !endDate) {
+        alert("Lütfen başlangıç ve bitiş tarihlerini seçin.");
+        return;
+    }
+
+    const url = `http://localhost:5000/api/siparis_tarih?startDate=${startDate}&endDate=${endDate}`;
+
+    try {
+        const response = await fetch(url);
+        const result = await response.json();
+
+        if (result.success) {
+            // Mevcut tabloyu yok et
+            if ($.fn.DataTable.isDataTable('#ordersTable')) {
+                $('#ordersTable').DataTable().destroy();
+            }
+
+            const tableBody = document.querySelector("#ordersTable tbody");
+            tableBody.innerHTML = ""; // Eski verileri temizle
+
+            result.data.forEach(order => {
+                const row = `
+                    <tr>
+                        <td>${order.id}</td>
+                        <td>${order.customer_name}</td>
+                        <td>${order.order_date}</td>
+                        <td>${order.total_amount}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+
+            // Tabloyu yeniden başlat
+            $('#ordersTable').DataTable();
+        } else {
+            alert("Siparişler alınamadı: " + result.message);
+        }
+    } catch (error) {
+        console.error("Bir hata oluştu:", error);
+    }
+}
+
+        // Sayfa yüklendiğinde verileri yükle
+        window.onload = () => {
+            loadOrders();
+            fetchSalesData();
+            filterOrders();
+        };
+    </script>
+</body>
+</html>

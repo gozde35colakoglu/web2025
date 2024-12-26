@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kullanıcı Bilgisi</title>
+</head>
+<body>
+    <h1>Kullanıcı Bilgisi</h1>
+    <input type="text" id="userId" placeholder="Kullanıcı Eposta">
+    <button onclick="getUser()">Kullanıcıyı Getir</button>
+    <div id="userInfo"></div>
+
+    <script>
+        async function getUser() {
+            const eposta = document.getElementById("userId").value;
+
+            if (!userId) {
+                alert("Lütfen bir kullanıcı ID'si girin.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/kullanici_getir/${eposta}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById("userInfo").innerHTML = `
+                        <p>ID: ${result.data.ID}</p>
+                        <p>Ad: ${result.data.ad_soyad}</p>
+                        <p>E-posta: ${result.data.eposta}</p>
+                        <p>Şifre: ${result.data.kullanici_sifre}</p>
+                        <p>Yetki: ${result.data.kullanici_yetki_id}</p>
+                        <p>Tarih: ${result.data.tarih}</p>
+                    `;
+                } else {
+                    document.getElementById("userInfo").innerHTML = `<p>${result.message}</p>`;
+                }
+            } catch (error) {
+                console.error("Bir hata oluştu:", error);
+                alert("Bir hata oluştu.");
+            }
+        }
+    </script>
+</body>
+</html>

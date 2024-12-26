@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Chart</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Sales Data</h1>
+    <canvas id="salesChart" width="400" height="200"></canvas>
+
+    <script>
+        async function fetchSalesData() {
+            try {
+                const response = await fetch("http://localhost:5000/api/satis_getir");
+                const result = await response.json();
+
+                if (result.success) {
+                    //X ekseni
+                    const labels = result.data.map(item => item.sales_date); // Tarihler
+                    //Y ekseni
+                    const data = result.data.map(item => item.sales_amount); // Satış miktarları
+
+                    // Grafik oluştur
+                    const ctx = document.getElementById("salesChart").getContext("2d");
+                    new Chart(ctx, {
+                        type: "line",
+                        data: {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: "Daily Sales",
+                                    data: data,
+                                    borderColor: "blue",
+                                    fill: false,
+                                    tension: 0.1,
+                                },
+                            ],
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: "Date",
+                                    },
+                                },
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: "Sales Amount",
+                                    },
+                                },
+                            },
+                        },
+                    });
+                } else {
+                    alert("Veri alınamadı: " + result.message);
+                }
+            } catch (error) {
+                console.error("Error fetching sales data:", error);
+            }
+        }
+
+        // Sayfa yüklendiğinde veriyi çek ve grafiği oluştur
+        window.onload = fetchSalesData;
+    </script>
+</body>
+</html>

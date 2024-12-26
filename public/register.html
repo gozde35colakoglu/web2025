@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+</head>
+<body>
+    <h1>Kayıt Formu</h1>
+    <form id="registerForm">
+        <label for="name">Ad Soyad:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="eposta">Eposta:</label>
+        <input type="text" id="eposta" name="eposta" required>
+        <label for="sifre">Kullanıcı Şifre:</label>
+        <input type="password" id="sifre" name="sifre" required>
+        <label for="yetki_id">Yetki ID</label>
+        <input type="text" id="yetki_id" name="yetki_id" required>
+        <label for="tarih">Tarih</label>
+        <input type="text" id="tarih" name="tarih" required>
+        <button type="submit">Kayıt Ol</button>
+    </form>
+    <script>
+        const form=document.getElementById('registerForm');
+        form.addEventListener("submit",async (e)=>{
+            e.preventDefault();
+            const formData={
+                adSoyad:document.getElementById("name").value,
+                eposta:document.getElementById("eposta").value,
+                kullanici_sifre:document.getElementById("sifre").value,
+                kullanici_yetki_id:document.getElementById("yetki_id").value,
+                tarih:document.getElementById("tarih").value,
+            }
+            try {
+    const response = await fetch("http://localhost:5000/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const result = await response.json();
+    if (result.success) {
+        alert("Kayıt Başarılı: " + result.message);
+    } else {
+        alert("Kayıt Başarısız: " + result.message);
+    }
+} catch (error) {
+    console.error("An error occurred:", error);
+    alert("Bir hata oluştu: " + error.message);
+}
+
+        })
+    </script>
+</body>
+</html>

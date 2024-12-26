@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Giriş Formu</h1>
+    <form id="loginForm">
+        <label for="eposta">Eposta:</label>
+        <input type="text" id="eposta" name="eposta" required>
+        <label for="sifre">Kullanıcı Şifre:</label>
+        <input type="password" id="sifre" name="sifre" required>
+        <button type="submit">Kayıt Ol</button>
+    </form>
+    <script>
+        const form=document.getElementById('loginForm');
+        form.addEventListener("submit",async (e)=>{
+            e.preventDefault();
+            const formData={
+                eposta:document.getElementById("eposta").value,
+                kullanici_sifre:document.getElementById("sifre").value,
+            }
+            try {
+    const response = await fetch("http://localhost:5000/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+    });
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const result = await response.json();
+    if (result.success) {
+       window.location="http://localhost:5000/kullanicilar.html"
+    } else {
+        alert("Giriş Başarısız: " + result.message);
+    }
+} catch (error) {
+    console.error("An error occurred:", error);
+    alert("Bir hata oluştu: " + error.message);
+}
+
+        })
+    </script>
+</body>
+</html>

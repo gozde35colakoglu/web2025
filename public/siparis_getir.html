@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siparişler</title>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+</head>
+<body>
+    <h1>Sipariş Listesi</h1>
+    <table id="ordersTable" class="display" style="width:100%">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Müşteri Adı</th>
+                <th>Sipariş Tarihi</th>
+                <th>Toplam Tutar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>5</td>
+                <td>Can Aydn</td>
+                <td>2024/05/02</td>
+                <td>5000</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        // Siparişleri API'den çek ve tabloya ekle
+        async function loadOrders() {
+            try {
+                const response = await fetch("http://localhost:5000/api/siparis_getir");
+                const result = await response.json();
+
+                if (result.success) {
+                    const tableBody = document.querySelector("#ordersTable tbody");
+                    result.data.forEach(order => {
+                        const row = `
+                            <tr>
+                                <td>${order.id}</td>
+                                <td>${order.customer_name}</td>
+                                <td>${order.order_date}</td>
+                                <td>${order.total_amount}</td>
+                            </tr>
+                        `;
+                        tableBody.innerHTML += row;
+                    });
+
+                    // DataTable'ı başlat
+                    $('#ordersTable').DataTable();
+                } else {
+                    alert("Siparişler alınamadı: " + result.message);
+                }
+            } catch (error) {
+                console.error("Bir hata oluştu:", error);
+            }
+        }
+
+        // Sayfa yüklendiğinde siparişleri getir
+        window.onload = loadOrders;
+    </script>
+</body>
+</html>
